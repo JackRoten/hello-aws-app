@@ -17,22 +17,47 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Create ECR repositories
+        working-directory: terraform
+        run: |
+          terraform init
+          terraform apply -auto-approve -target=aws_ecr_repository.backend -target=aws_ecr_repository.frontend \
+            -var="db_user=${{ secrets.DB_USER }}" \
+            -var="db_pass=${{ secrets.DB_PASS }}" \
+            -var="region=us-east-1"
+
+      - name: Get ECR URIs
+        id: ecr
+        working-directory: terraform
+        run: |
+          echo "backend_uri=$(terraform output -raw ecr_backend_uri)" >> $GITHUB_OUTPUT
+          echo "frontend_uri=$(terraform output -raw ecr_frontend_uri)" >> $GITHUB_OUTPUT
+
       - uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build & push backend
         run: |
           docker build -t backend ./backend
-          docker tag backend:latest ${{ secrets.ECR_BACKEND_URI }}:latest
-          docker push ${{ secrets.ECR_BACKEND_URI }}:latest
+          docker tag backend:latest ${{ steps.ecr.outputs.backend_uri }}:latest
+          docker push ${{ steps.ecr.outputs.backend_uri }}:latest
 
       - name: Build & push frontend
         run: |
           docker build -t frontend ./frontend
-          docker tag frontend:latest ${{ secrets.ECR_FRONTEND_URI }}:latest
-          docker push ${{ secrets.ECR_FRONTEND_URI }}:latest
+          docker tag frontend:latest ${{ steps.ecr.outputs.frontend_uri }}:latest
+          docker push ${{ steps.ecr.outputs.frontend_uri }}:latest
 
       - name: Terraform deploy
         working-directory: terraform
         run: |
-          terraform init
-          terraform apply -auto-approve
+          terraform apply -auto-approve \
+            -var="backend_image=${{ steps.ecr.outputs.backend_uri }}:latest" \
+            -var="frontend_image=${{ steps.ecr.outputs.frontend_uri }}:latest" \
+            -var="db_user=${{ secrets.DB_USER }}" \
+            -var="db_pass=${{ secrets.DB_PASS }}" \
+            -var="region=us-east-1"
