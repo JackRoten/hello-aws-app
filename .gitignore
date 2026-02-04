@@ -38,6 +38,12 @@ uv.lock
 scratch_work.txt
 infra/hashicorp/
 
+# Terraform bootstrap state (keep local for bootstrap resources)
+terraform/bootstrap/terraform.tfstate
+terraform/bootstrap/terraform.tfstate.backup
+terraform/bootstrap/.terraform/
+terraform/bootstrap/.terraform.lock.hcl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
