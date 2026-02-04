@@ -102,12 +102,12 @@ jobs:
           docker tag frontend:latest ${{ steps.ecr.outputs.frontend_uri }}:latest
           docker push ${{ steps.ecr.outputs.frontend_uri }}:latest
 
-      # - name: Terraform deploy
-      #   working-directory: terraform
-      #   run: |
-      #     terraform apply -auto-approve \
-      #       -var="backend_image=${{ steps.ecr.outputs.backend_uri }}:latest" \
-      #       -var="frontend_image=${{ steps.ecr.outputs.frontend_uri }}:latest" \
-      #       -var="db_user=${{ secrets.DB_USER }}" \
-      #       -var="db_pass=${{ secrets.DB_PASS }}" \
-      #       -var="region=${{ env.AWS_REGION }}"
+      - name: Terraform deploy
+        working-directory: terraform
+        run: |
+          terraform apply -auto-approve \
+            -var="backend_image=${{ steps.ecr.outputs.backend_uri }}:latest" \
+            -var="frontend_image=${{ steps.ecr.outputs.frontend_uri }}:latest" \
+            -var="db_user=${{ secrets.DB_USER }}" \
+            -var="db_pass=${{ secrets.DB_PASS }}" \
+            -var="region=${{ env.AWS_REGION }}"
