@@ -6,8 +6,8 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  TF_STATE_BUCKET: hello-aws-app-terraform-state
-  TF_LOCK_TABLE: hello-aws-app-terraform-locks
+  # TF_STATE_BUCKET: hello-aws-app-terraform-state
+  # TF_LOCK_TABLE: hello-aws-app-terraform-locks
 
 jobs:
   # bootstrap:
@@ -64,10 +64,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
+      # - name: Setup Terraform
+      #   uses: hashicorp/setup-terraform@v3
+      #   with:
+      #     terraform_wrapper: false
 
       - name: Terraform Init
         working-directory: terraform
@@ -102,12 +102,12 @@ jobs:
           docker tag frontend:latest ${{ steps.ecr.outputs.frontend_uri }}:latest
           docker push ${{ steps.ecr.outputs.frontend_uri }}:latest
 
-      - name: Terraform deploy
-        working-directory: terraform
-        run: |
-          terraform apply -auto-approve \
-            -var="backend_image=${{ steps.ecr.outputs.backend_uri }}:latest" \
-            -var="frontend_image=${{ steps.ecr.outputs.frontend_uri }}:latest" \
-            -var="db_user=${{ secrets.DB_USER }}" \
-            -var="db_pass=${{ secrets.DB_PASS }}" \
-            -var="region=${{ env.AWS_REGION }}"
+      # - name: Terraform deploy
+      #   working-directory: terraform
+      #   run: |
+      #     terraform apply -auto-approve \
+      #       -var="backend_image=${{ steps.ecr.outputs.backend_uri }}:latest" \
+      #       -var="frontend_image=${{ steps.ecr.outputs.frontend_uri }}:latest" \
+      #       -var="db_user=${{ secrets.DB_USER }}" \
+      #       -var="db_pass=${{ secrets.DB_PASS }}" \
+      #       -var="region=${{ env.AWS_REGION }}"
